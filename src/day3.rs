@@ -2,7 +2,7 @@ use crate::util;
 use std::collections::{HashMap, HashSet};
 use std::io::BufRead;
 
-pub fn parse_input<'a>() -> Vec<Vec<String>> {
+pub fn parse_input() -> Vec<Vec<String>> {
     let mut out = Vec::new();
 
     let mut input = &util::read_input_file("day3.txt")[..];
@@ -43,7 +43,7 @@ fn parse_direction<'a>(s: &'a str) -> Direction {
     }
 }
 
-pub fn part1<'a>(lines: Vec<Vec<&'a str>>) -> i32 {
+pub fn part1(lines: &Vec<Vec<String>>) -> i32 {
     let mut coords: Vec<HashSet<(i32, i32)>> = Vec::new();
 
     for line in lines {
@@ -51,7 +51,7 @@ pub fn part1<'a>(lines: Vec<Vec<&'a str>>) -> i32 {
         let mut points = HashSet::new();
 
         for dir in line {
-            match parse_direction(dir) {
+            match parse_direction(&dir) {
                 Direction::Up(dist) => {
                     for _ in 0..dist {
                         last_coord = (last_coord.0, last_coord.1 + 1);
@@ -97,7 +97,7 @@ pub fn part1<'a>(lines: Vec<Vec<&'a str>>) -> i32 {
     min.0.abs() + min.1.abs()
 }
 
-pub fn part2<'a>(lines: Vec<Vec<&'a str>>) -> usize {
+pub fn part2(lines: &Vec<Vec<String>>) -> usize {
     let mut coords: Vec<Vec<(i32, i32)>> = Vec::new();
 
     for line in lines {
@@ -105,7 +105,7 @@ pub fn part2<'a>(lines: Vec<Vec<&'a str>>) -> usize {
         let mut points = Vec::new();
 
         for dir in line {
-            match parse_direction(dir) {
+            match parse_direction(&dir) {
                 Direction::Up(dist) => {
                     for _ in 0..dist {
                         last_coord = (last_coord.0, last_coord.1 + 1);
@@ -164,73 +164,61 @@ pub fn part2<'a>(lines: Vec<Vec<&'a str>>) -> usize {
 mod tests {
     use super::*;
 
+    fn sample_line<'a>(s: &'a str) -> Vec<String> {
+        s.split(',').map(|s| s.to_string()).collect()
+    }
+
     #[test]
     fn part1_example1() {
         let input = vec![
-            vec!["R75", "D30", "R83", "U83", "L12", "D49", "R71", "U7", "L72"],
-            vec!["U62", "R66", "U55", "R34", "D71", "R55", "D58", "R83"],
+            sample_line("R75,D30,R83,U83,L12,D49,R71,U7,L72"),
+            sample_line("U62,R66,U55,R34,D71,R55,D58,R83"),
         ];
 
-        assert_eq!(part1(input), 159);
+        assert_eq!(part1(&input), 159);
     }
 
     #[test]
     fn part1_example2() {
         let input = vec![
-            vec![
-                "R98", "U47", "R26", "D63", "R33", "U87", "L62", "D20", "R33", "U53", "R51",
-            ],
-            vec![
-                "U98", "R91", "D20", "R16", "D67", "R40", "U7", "R15", "U6", "R7",
-            ],
+            sample_line("R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51"),
+            sample_line("U98,R91,D20,R16,D67,R40,U7,R15,U6,R7"),
         ];
 
-        assert_eq!(part1(input), 135);
+        assert_eq!(part1(&input), 135);
     }
 
     #[test]
     fn part1_real() {
         let input = parse_input();
-        let refs = input
-            .iter()
-            .map(|v| v.iter().map(String::as_ref).collect())
-            .collect();
 
-        assert_eq!(part1(refs), 860);
+        assert_eq!(part1(&input), 860);
     }
 
     #[test]
     fn part2_example1() {
         let input = vec![
-            vec!["R75", "D30", "R83", "U83", "L12", "D49", "R71", "U7", "L72"],
-            vec!["U62", "R66", "U55", "R34", "D71", "R55", "D58", "R83"],
+            sample_line("R75,D30,R83,U83,L12,D49,R71,U7,L72"),
+            sample_line("U62,R66,U55,R34,D71,R55,D58,R83"),
         ];
 
-        assert_eq!(part2(input), 610);
+        assert_eq!(part2(&input), 610);
     }
 
     #[test]
     fn part2_example2() {
         let input = vec![
-            vec![
-                "R98", "U47", "R26", "D63", "R33", "U87", "L62", "D20", "R33", "U53", "R51",
-            ],
-            vec![
-                "U98", "R91", "D20", "R16", "D67", "R40", "U7", "R15", "U6", "R7",
-            ],
+            sample_line("R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51"),
+            sample_line("U98,R91,D20,R16,D67,R40,U7,R15,U6,R7"),
         ];
 
-        assert_eq!(part2(input), 410);
+        assert_eq!(part2(&input), 410);
     }
 
     #[test]
     fn part2_real() {
         let input = parse_input();
-        let refs = input
-            .iter()
-            .map(|v| v.iter().map(String::as_ref).collect())
-            .collect();
 
-        assert_eq!(part2(refs), 9238);
+        assert_eq!(part2(&input), 9238);
     }
 }
