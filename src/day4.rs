@@ -1,5 +1,3 @@
-use std::ops::Range;
-
 fn has_adjecent_digit(password: [usize; 6]) -> bool {
     let mut num = password[0];
 
@@ -44,27 +42,32 @@ fn min_adjacent_digits(password: [usize; 6]) -> usize {
     min_adjacent_digits
 }
 
-fn always_increases(password: [usize; 6]) -> bool {
+fn next_always_increasing_number(password: &mut [usize; 6]) {
     let mut num = password[0];
 
-    for n in &password[1..] {
-        if num > *n {
-            return false;
+    for i in 1..6 {
+        let n = password[i];
+
+        if n < num {
+            for j in i..6 {
+                password[j] = num;
+            }
+
+            break;
+        } else {
+            num = n;
         }
-
-        num = *n;
     }
-
-    true
 }
 
 pub fn part1() -> usize {
     let mut matches = 0;
 
     let mut candidate: [usize; 6] = [1, 5, 2, 0, 8, 5];
+    next_always_increasing_number(&mut candidate);
 
     while candidate <= [6, 7, 0, 2, 8, 3] {
-        if has_adjecent_digit(candidate) && always_increases(candidate) {
+        if has_adjecent_digit(candidate) {
             matches += 1;
         }
 
@@ -91,9 +94,10 @@ pub fn part2() -> usize {
     let mut matches = 0;
 
     let mut candidate: [usize; 6] = [1, 5, 2, 0, 8, 5];
+    next_always_increasing_number(&mut candidate);
 
     while candidate <= [6, 7, 0, 2, 8, 3] {
-        if min_adjacent_digits(candidate) == 2 && always_increases(candidate) {
+        if min_adjacent_digits(candidate) == 2 {
             matches += 1;
         }
 
