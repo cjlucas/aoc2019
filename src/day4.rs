@@ -78,6 +78,10 @@ pub fn part1() -> usize {
             candidate[pos] = 0;
             pos -= 1;
         }
+
+        for i in pos + 1..6 {
+            candidate[i] = candidate[pos];
+        }
     }
 
     matches
@@ -102,6 +106,10 @@ pub fn part2() -> usize {
 
             candidate[pos] = 0;
             pos -= 1;
+        }
+
+        for i in pos + 1..6 {
+            candidate[i] = candidate[pos];
         }
     }
 
