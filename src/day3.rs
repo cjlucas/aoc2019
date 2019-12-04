@@ -22,11 +22,164 @@ pub fn parse_input() -> Vec<Vec<String>> {
     out
 }
 
+#[derive(Debug)]
 enum Direction {
+    // TODO: rename segment
     Up(i32),
     Right(i32),
     Down(i32),
     Left(i32),
+}
+
+impl Direction {
+    fn length(&self) -> i32 {
+        match *self {
+            Direction::Up(n) => n,
+            Direction::Down(n) => n,
+            Direction::Left(n) => n,
+            Direction::Right(n) => n,
+        }
+    }
+}
+
+#[derive(PartialEq, Eq, Debug, Hash, Clone, Copy)]
+struct Point {
+    x: i32,
+    y: i32,
+}
+
+impl Point {
+    fn origin() -> Self {
+        Self { x: 0, y: 0 }
+    }
+}
+
+#[derive(Debug)]
+struct Wire {
+    path: Vec<Direction>,
+}
+
+impl Wire {
+    fn new(path: impl Iterator<Item = Direction>) -> Self {
+        Self {
+            path: path.collect(),
+        }
+    }
+
+    fn steps_from_central_point(&self, point: &Point) -> i32 {
+        let mut steps = 0;
+
+        let mut current_point = Point::origin();
+        for segment in &self.path {
+            let next_point = match segment {
+                Direction::Up(dist) => Point {
+                    x: current_point.x,
+                    y: current_point.y + dist,
+                },
+                Direction::Right(dist) => Point {
+                    x: current_point.x + dist,
+                    y: current_point.y,
+                },
+                Direction::Down(dist) => Point {
+                    x: current_point.x,
+                    y: current_point.y - dist,
+                },
+                Direction::Left(dist) => Point {
+                    x: current_point.x - dist,
+                    y: current_point.y,
+                },
+            };
+
+            if point.x == current_point.x && (current_point.y..=next_point.y).contains(&point.y) {
+                println!("hit it {:?}", segment);
+                steps += (point.y.abs() - current_point.y.abs()).abs();
+                break;
+            }
+
+            if point.y == current_point.y && (current_point.x..=next_point.x).contains(&point.x) {
+                println!("hit it {:?}", segment);
+                steps += (point.x.abs() - current_point.x.abs()).abs();
+                break;
+            }
+
+            current_point = next_point;
+            steps += segment.length();
+        }
+
+        println!("{:?}", point);
+        println!("{:?}", self.path);
+        println!("{:?}", steps);
+        println!();
+
+        steps
+    }
+}
+
+#[derive(Default)]
+struct FrontPanel {
+    wires: Vec<Wire>,
+}
+
+impl FrontPanel {
+    pub fn add_wire(&mut self, wire: Wire) {
+        self.wires.push(wire);
+    }
+
+    fn intersection_points(&self) -> HashSet<Point> {
+        let sets: Vec<HashSet<Point>> = self
+            .wires
+            .iter()
+            .map(|wire| {
+                let mut points = HashSet::new();
+                let mut last_point = Point { x: 0, y: 0 };
+
+                for direction in &wire.path {
+                    match *direction {
+                        Direction::Up(dist) => {
+                            for _ in 0..dist {
+                                last_point.y += 1;
+                                points.insert(last_point);
+                            }
+                        }
+                        Direction::Right(dist) => {
+                            for _ in 0..dist {
+                                last_point.x += 1;
+                                points.insert(last_point);
+                            }
+                        }
+                        Direction::Down(dist) => {
+                            for _ in 0..dist {
+                                last_point.y -= 1;
+                                points.insert(last_point);
+                            }
+                        }
+                        Direction::Left(dist) => {
+                            for _ in 0..dist {
+                                last_point.x -= 1;
+                                points.insert(last_point);
+                            }
+                        }
+                    }
+                }
+                points
+            })
+            .collect();
+
+        let mut candidate_points = match sets.first() {
+            Some(first) => first.clone(),
+            None => return HashSet::new(),
+        };
+
+        for set in &sets[1..] {
+            candidate_points = set.intersection(&candidate_points).cloned().collect();
+        }
+
+        candidate_points
+    }
+
+    fn distance_from_central_point(p: &Point) -> i32 {
+        p.x.abs() + p.y.abs()
+    }
 }
 
 fn parse_direction<'a>(s: &'a str) -> Direction {
@@ -44,116 +197,37 @@ fn parse_direction<'a>(s: &'a str) -> Direction {
 }
 
 pub fn part1(lines: &Vec<Vec<String>>) -> i32 {
-    let mut coords: Vec<HashSet<(i32, i32)>> = Vec::new();
+    let mut panel = FrontPanel::default();
 
     for line in lines {
-        let mut last_coord = (0, 0);
-        let mut points = HashSet::new();
-
-        for dir in line {
-            match parse_direction(&dir) {
-                Direction::Up(dist) => {
-                    for _ in 0..dist {
-                        last_coord = (last_coord.0, last_coord.1 + 1);
-                        points.insert(last_coord);
-                    }
-                }
-                Direction::Right(dist) => {
-                    for _ in 0..dist {
-                        last_coord = (last_coord.0 + 1, last_coord.1);
-                        points.insert(last_coord);
-                    }
-                }
-                Direction::Down(dist) => {
-                    for _ in 0..dist {
-                        last_coord = (last_coord.0, last_coord.1 - 1);
-                        points.insert(last_coord);
-                    }
-                }
-                Direction::Left(dist) => {
-                    for _ in 0..dist {
-                        last_coord = (last_coord.0 - 1, last_coord.1);
-                        points.insert(last_coord);
-                    }
-                }
-            }
-        }
-
-        coords.push(points);
+        let path = line.iter().map(|s| parse_direction(&s));
+        panel.add_wire(Wire::new(path));
     }
 
-    let mut common = coords[0].clone();
-
-    for set in &coords[1..] {
-        common = common.intersection(set).cloned().collect();
-    }
-
-    let min = common
+    panel
+        .intersection_points()
         .iter()
-        .cloned()
-        .min_by(|(x1, y1), (x2, y2)| (x1.abs() + y1.abs()).cmp(&(x2.abs() + y2.abs())))
-        .unwrap();
-
-    min.0.abs() + min.1.abs()
+        .map(FrontPanel::distance_from_central_point)
+        .min()
+        .unwrap()
 }
 
-pub fn part2(lines: &Vec<Vec<String>>) -> usize {
-    let mut coords: Vec<Vec<(i32, i32)>> = Vec::new();
+pub fn part2(lines: &Vec<Vec<String>>) -> i32 {
+    let mut panel = FrontPanel::default();
 
     for line in lines {
-        let mut last_coord = (0, 0);
-        let mut points = Vec::new();
-
-        for dir in line {
-            match parse_direction(&dir) {
-                Direction::Up(dist) => {
-                    for _ in 0..dist {
-                        last_coord = (last_coord.0, last_coord.1 + 1);
-                        points.push(last_coord);
-                    }
-                }
-                Direction::Right(dist) => {
-                    for _ in 0..dist {
-                        last_coord = (last_coord.0 + 1, last_coord.1);
-                        points.push(last_coord);
-                    }
-                }
-                Direction::Down(dist) => {
-                    for _ in 0..dist {
-                        last_coord = (last_coord.0, last_coord.1 - 1);
-                        points.push(last_coord);
-                    }
-                }
-                Direction::Left(dist) => {
-                    for _ in 0..dist {
-                        last_coord = (last_coord.0 - 1, last_coord.1);
-                        points.push(last_coord);
-                    }
-                }
-            }
-        }
-
-        coords.push(points);
+        let path = line.iter().map(|s| parse_direction(&s));
+        panel.add_wire(Wire::new(path));
     }
 
-    let mut common: HashSet<(i32, i32)> = coords[0].iter().cloned().collect();
-
-    for steps in &coords[1..] {
-        common = steps
-            .iter()
-            .cloned()
-            .collect::<HashSet<(i32, i32)>>()
-            .intersection(&common)
-            .cloned()
-            .collect();
-    }
-
-    common
+    panel
+        .intersection_points()
         .iter()
         .map(|point| {
-            coords
+            panel
+                .wires
                 .iter()
-                .map(|coord| coord.iter().position(|p| point == p).unwrap() + 1)
+                .map(|wire| wire.steps_from_central_point(&point))
                 .sum()
         })
         .min()
