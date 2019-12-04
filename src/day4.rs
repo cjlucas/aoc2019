@@ -1,17 +1,3 @@
-fn has_adjecent_digit(password: [usize; 6]) -> bool {
-    let mut num = password[0];
-
-    for n in &password[1..] {
-        if num == *n {
-            return true;
-        }
-
-        num = *n;
-    }
-
-    false
-}
-
 fn min_adjacent_digits(password: [usize; 6]) -> usize {
     let mut min_adjacent_digits = 0;
     let mut cur_adjacent_digits = 1;
@@ -67,7 +53,7 @@ pub fn part1() -> usize {
     next_always_increasing_number(&mut candidate);
 
     while candidate <= [6, 7, 0, 2, 8, 3] {
-        if has_adjecent_digit(candidate) {
+        if min_adjacent_digits(candidate) > 1 {
             matches += 1;
         }
 
