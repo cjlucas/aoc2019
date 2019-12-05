@@ -1,10 +1,8 @@
 use std::iter::Iterator;
-use std::ops::RangeInclusive;
 
 type Password = [usize; 6];
 
 struct PasswordIterator {
-    start: Password,
     end: Password,
     current: Password,
 }
@@ -14,11 +12,7 @@ impl PasswordIterator {
         let mut current = start.clone();
         Self::next_always_increasing_number(&mut current);
 
-        Self {
-            start,
-            end,
-            current,
-        }
+        Self { end, current }
     }
 
     fn next_always_increasing_number(password: &mut Password) {
