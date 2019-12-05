@@ -63,7 +63,7 @@ impl Iterator for PasswordIterator {
     }
 }
 
-fn min_adjacent_digits(password: &[usize; 6]) -> usize {
+fn min_adjacent_digits(password: &Password) -> usize {
     let mut min_adjacent_digits = 0;
     let mut cur_adjacent_digits = 1;
     let mut num = password[0];
