@@ -63,61 +63,29 @@ impl Iterator for PasswordIterator {
     }
 }
 
-fn min_adjacent_digits(password: &Password) -> usize {
-    let mut min_adjacent_digits = 0;
-    let mut cur_adjacent_digits = 1;
-    let mut num = password[0];
-
-    for n in &password[1..] {
-        if num == *n {
-            cur_adjacent_digits += 1;
-        } else {
-            if cur_adjacent_digits > 1 {
-                if min_adjacent_digits == 0 || cur_adjacent_digits < min_adjacent_digits {
-                    min_adjacent_digits = cur_adjacent_digits;
-                }
-            }
-
-            cur_adjacent_digits = 1;
-        }
-
-        num = *n;
-    }
-
-    if cur_adjacent_digits > 1 {
-        if min_adjacent_digits == 0 || cur_adjacent_digits < min_adjacent_digits {
-            min_adjacent_digits = cur_adjacent_digits;
-        }
-    }
-
-    min_adjacent_digits
-}
-
 pub fn part1() -> usize {
     PasswordIterator::new([1, 5, 2, 0, 8, 5], [6, 7, 0, 2, 8, 3])
-        .filter(|candidate| min_adjacent_digits(candidate) > 1)
+        .filter(|pw| {
+            pw[0] == pw[1] || pw[1] == pw[2] || pw[2] == pw[3] || pw[3] == pw[4] || pw[4] == pw[5]
+        })
         .count()
 }
 
 pub fn part2() -> usize {
     PasswordIterator::new([1, 5, 2, 0, 8, 5], [6, 7, 0, 2, 8, 3])
-        .filter(|candidate| min_adjacent_digits(candidate) == 2)
+        .filter(|pw| {
+            (pw[0] == pw[1] && pw[1] != pw[2])
+                || (pw[0] != pw[1] && pw[1] == pw[2] && pw[2] != pw[3])
+                || (pw[1] != pw[2] && pw[2] == pw[3] && pw[3] != pw[4])
+                || (pw[2] != pw[3] && pw[3] == pw[4] && pw[4] != pw[5])
+                || (pw[3] != pw[4] && pw[4] == pw[5])
+        })
         .count()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn test_min_adjacent_digits2() {
-        assert_eq!(2, min_adjacent_digits(&[1, 1, 1, 1, 2, 2]));
-    }
-
-    #[test]
-    fn test_min_adjacent_digits() {
-        assert_eq!(3, min_adjacent_digits(&[1, 2, 3, 4, 4, 4]));
-    }
 
     #[test]
     fn test_part1() {
