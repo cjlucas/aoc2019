@@ -45,16 +45,11 @@ pub fn part2(input: &Vec<String>) -> usize {
         curkey = val;
     }
 
-    for (cur, i) in you_path.iter().enumerate() {
-        let mut cur = cur;
-
-        for j in &santa_path {
+    for (steps_from_you, i) in you_path.iter().enumerate() {
+        for (steps_from_santa, j) in santa_path.iter().enumerate() {
             if i == j {
-                println!("FOUND a common thing: {}", i);
-                return cur;
+                return steps_from_you + steps_from_santa;
             }
-
-            cur += 1;
         }
     }
 
