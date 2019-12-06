@@ -21,52 +21,38 @@ impl UniversalOrbitMap {
 
         path
     }
+
+    pub fn orbiters(&self) -> impl Iterator<Item = &String> {
+        self.orbits.keys()
+    }
 }
 
-fn build_orbit_graph(input: &Vec<String>) -> HashMap<String, String> {
-    input
-        .iter()
-        .map(|line| {
-            let mut split = line.splitn(2, ')');
+fn build_orbit_map(input: &Vec<String>) -> UniversalOrbitMap {
+    let mut map = UniversalOrbitMap::default();
 
-            let orbitee = split.nth(0).unwrap().to_string();
-            let orbiter = split.nth(0).unwrap().to_string();
+    input.iter().for_each(|line| {
+        let mut split = line.splitn(2, ')');
 
-            (orbiter, orbitee)
-        })
-        .collect()
+        let orbitee = split.nth(0).unwrap().to_string();
+        let orbiter = split.nth(0).unwrap().to_string();
+
+        map.add_orbit(orbiter, orbitee);
+    });
+
+    map
 }
 
 pub fn part1(input: &Vec<String>) -> usize {
-    let orbits = build_orbit_graph(input);
-
-    let mut memo: HashMap<String, usize> = HashMap::new();
-    for key in orbits.keys() {
-        let mut num_orbits = 0;
-        let mut curkey = key;
-
-        while let Some(key) = orbits.get(curkey) {
-            num_orbits += 1;
-            curkey = key;
-
-            if let Some(suborbits) = memo.get(key) {
-                num_orbits += suborbits;
-                break;
-            }
-        }
-
-        memo.insert(key.to_string(), num_orbits);
-    }
-
-    memo.values().sum()
+    let orbits = build_orbit_map(input);
+    orbits
+        .orbiters()
+        .map(|x| orbits.path_to_center_of_mass(x.to_string()))
+        .map(|x| x.len())
+        .sum()
 }
 
 pub fn part2(input: &Vec<String>) -> usize {
-    let orbits = build_orbit_graph(input);
-    let mut map = UniversalOrbitMap::default();
-    orbits
-        .iter()
-        .for_each(|(x, y)| map.add_orbit(x.to_string(), y.to_string()));
+    let map = build_orbit_map(input);
 
     let you_path = map.path_to_center_of_mass("YOU".to_string());
     let santa_path = map.path_to_center_of_mass("SAN".to_string());
