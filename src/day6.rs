@@ -1,5 +1,28 @@
 use std::collections::HashMap;
 
+#[derive(Default)]
+struct UniversalOrbitMap {
+    orbits: HashMap<String, String>,
+}
+
+impl UniversalOrbitMap {
+    pub fn add_orbit(&mut self, orbiter: String, orbitee: String) {
+        self.orbits.insert(orbiter, orbitee);
+    }
+
+    pub fn path_to_center_of_mass(&self, object_name: String) -> Vec<String> {
+        let mut curkey = &object_name;
+        let mut path = Vec::new();
+
+        while let Some(val) = self.orbits.get(curkey) {
+            path.push(val.clone());
+            curkey = val;
+        }
+
+        path
+    }
+}
+
 fn build_orbit_graph(input: &Vec<String>) -> HashMap<String, String> {
     input
         .iter()
@@ -40,20 +63,13 @@ pub fn part1(input: &Vec<String>) -> usize {
 
 pub fn part2(input: &Vec<String>) -> usize {
     let orbits = build_orbit_graph(input);
+    let mut map = UniversalOrbitMap::default();
+    orbits
+        .iter()
+        .for_each(|(x, y)| map.add_orbit(x.to_string(), y.to_string()));
 
-    let mut you_path = Vec::new();
-    let mut curkey = &"YOU".to_string();
-    while let Some(val) = orbits.get(curkey) {
-        you_path.push(val.clone());
-        curkey = val;
-    }
-
-    let mut santa_path = Vec::new();
-    let mut curkey = &"SAN".to_string();
-    while let Some(val) = orbits.get(curkey) {
-        santa_path.push(val.clone());
-        curkey = val;
-    }
+    let you_path = map.path_to_center_of_mass("YOU".to_string());
+    let santa_path = map.path_to_center_of_mass("SAN".to_string());
 
     for (steps_from_you, i) in you_path.iter().enumerate() {
         for (steps_from_santa, j) in santa_path.iter().enumerate() {
