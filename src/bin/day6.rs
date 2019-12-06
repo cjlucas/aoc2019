@@ -9,6 +9,6 @@ fn main() {
         .map(|line| line.trim().to_string())
         .collect();
 
-    println!("part1: {}", day6::part1(input.clone()));
-    println!("part2: {}", day6::part2(input));
+    println!("part1: {}", day6::part1(&input));
+    println!("part2: {}", day6::part2(&input));
 }
