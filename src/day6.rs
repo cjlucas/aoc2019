@@ -16,16 +16,26 @@ fn build_orbit_graph(input: &Vec<String>) -> HashMap<String, String> {
 
 pub fn part1(input: &Vec<String>) -> usize {
     let orbits = build_orbit_graph(input);
-    let mut num_orbits = 0;
 
+    let mut memo: HashMap<String, usize> = HashMap::new();
     for key in orbits.keys() {
+        let mut num_orbits = 0;
         let mut curkey = key;
+
         while let Some(key) = orbits.get(curkey) {
             num_orbits += 1;
             curkey = key;
+
+            if let Some(suborbits) = memo.get(key) {
+                num_orbits += suborbits;
+                break;
+            }
         }
+
+        memo.insert(key.to_string(), num_orbits);
     }
-    num_orbits
+
+    memo.values().sum()
 }
 
 pub fn part2(input: &Vec<String>) -> usize {
