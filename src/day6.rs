@@ -74,7 +74,17 @@ pub fn part2(input: Vec<String>) -> usize {
 
 #[cfg(test)]
 mod tests {
+    use super::super::util;
     use super::*;
+
+    fn read_input() -> Vec<String> {
+        let input = util::read_input_file("day6.txt");
+        String::from_utf8(input)
+            .unwrap()
+            .lines()
+            .map(|line| line.trim().to_string())
+            .collect()
+    }
 
     #[test]
     fn part1_sample() {
@@ -88,6 +98,11 @@ mod tests {
     }
 
     #[test]
+    fn part1_input() {
+        assert_eq!(241064, part1(read_input()));
+    }
+
+    #[test]
     fn part2_sample() {
         let input = "COM)B\nB)C\nC)D\nD)E\nE)F\nB)G\nG)H\nD)I\nE)J\nJ)K\nK)L\nK)YOU\nI)SAN\n"
             .lines()
@@ -96,5 +111,10 @@ mod tests {
             .collect();
 
         assert_eq!(4, part2(input));
+    }
+
+    #[test]
+    fn part2_input() {
+        assert_eq!(418, part2(read_input()));
     }
 }
