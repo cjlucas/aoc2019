@@ -98,80 +98,64 @@ pub fn part1(lines: &Vec<Vec<String>>) -> i32 {
 }
 
 pub fn part2(lines: &Vec<Vec<String>>) -> usize {
-    let mut coords: HashMap<(i32, i32), Vec<usize>> = HashMap::new();
+    let mut coords: Vec<Vec<(i32, i32)>> = Vec::new();
 
     for line in lines {
         let mut last_coord = (0, 0);
-        let mut steps = 0;
+        let mut points = Vec::new();
 
         for dir in line {
             match parse_direction(&dir) {
                 Direction::Up(dist) => {
                     for _ in 0..dist {
                         last_coord = (last_coord.0, last_coord.1 + 1);
-                        match coords.get_mut(&last_coord) {
-                            Some(steps_list) => steps_list.push(steps),
-                            None => {
-                                coords.insert(last_coord, vec![steps]);
-                            }
-                        }
+                        points.push(last_coord);
                     }
-                    steps += dist as usize;
                 }
                 Direction::Right(dist) => {
                     for _ in 0..dist {
                         last_coord = (last_coord.0 + 1, last_coord.1);
-                        match coords.get_mut(&last_coord) {
-                            Some(steps_list) => steps_list.push(steps),
-                            None => {
-                                coords.insert(last_coord, vec![steps]);
-                            }
-                        }
+                        points.push(last_coord);
                     }
-                    steps += dist as usize;
                 }
                 Direction::Down(dist) => {
                     for _ in 0..dist {
                         last_coord = (last_coord.0, last_coord.1 - 1);
-                        match coords.get_mut(&last_coord) {
-                            Some(steps_list) => steps_list.push(steps),
-                            None => {
-                                coords.insert(last_coord, vec![steps]);
-                            }
-                        }
+                        points.push(last_coord);
                     }
-                    steps += dist as usize;
                 }
                 Direction::Left(dist) => {
                     for _ in 0..dist {
                         last_coord = (last_coord.0 - 1, last_coord.1);
-                        match coords.get_mut(&last_coord) {
-                            Some(steps_list) => steps_list.push(steps),
-                            None => {
-                                coords.insert(last_coord, vec![steps]);
-                            }
-                        }
+                        points.push(last_coord);
                     }
-                    steps += dist as usize;
                 }
             }
         }
+
+        coords.push(points);
     }
 
-    println!(
-        "{:?}",
-        coords
-            .values()
-            .filter(|steps_list| steps_list.len() > 1)
-            .collect::<Vec<_>>()
-    );
+    let mut common: HashSet<(i32, i32)> = coords[0].iter().cloned().collect();
 
-    println!("{:?}", lines.len());
+    for steps in &coords[1..] {
+        common = steps
+            .iter()
+            .cloned()
+            .collect::<HashSet<(i32, i32)>>()
+            .intersection(&common)
+            .cloned()
+            .collect();
+    }
 
-    coords
-        .values()
-        .filter(|steps_list| steps_list.len() == lines.len())
-        .map(|steps_list| steps_list.iter().sum())
+    common
+        .iter()
+        .map(|point| {
+            coords
+                .iter()
+                .map(|coord| coord.iter().position(|p| point == p).unwrap() + 1)
+                .sum()
+        })
         .min()
         .unwrap()
 }
