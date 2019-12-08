@@ -5,6 +5,19 @@ use std::io::Read;
 const WIDTH: usize = 25;
 const HEIGHT: usize = 6;
 
+trait CountOf<'a, T: Eq + 'a> {
+    fn count_of(&self, t: T) -> usize;
+}
+
+impl<'a, T> CountOf<'a, T> for &'a [T]
+where
+    T: Eq + 'a,
+{
+    fn count_of(&self, t: T) -> usize {
+        self.into_iter().filter(|x| **x == t).count()
+    }
+}
+
 fn layers<'a>(chars: &'a Vec<char>) -> impl Iterator<Item = &'a [char]> {
     chars.as_slice().chunks_exact(WIDTH * HEIGHT)
 }
@@ -16,27 +29,20 @@ fn read_input() -> Vec<char> {
     s.trim().chars().collect()
 }
 
-fn count_of<'a, T>(into_iter: impl IntoIterator<Item = &'a T>, t: T) -> usize
-where
-    T: Eq + 'a,
-{
-    into_iter.into_iter().filter(|x| **x == t).count()
-}
-
 pub fn part1() -> usize {
     let chars = read_input();
 
     let layer = layers(&chars)
         .min_by(|a, b| {
-            let a = count_of(*a, '0');
-            let b = count_of(*b, '0');
+            let a = a.count_of('0');
+            let b = b.count_of('0');
 
             a.cmp(&b)
         })
         .unwrap();
 
-    let n_ones = count_of(layer, '1');
-    let n_twos = count_of(layer, '2');
+    let n_ones = layer.count_of('1');
+    let n_twos = layer.count_of('2');
 
     n_ones * n_twos
 }
