@@ -1,8 +1,5 @@
-use permutate::Permutator;
-use std::collections::{HashSet, LinkedList};
-use std::io::{self, Read, Write};
-
-use crate::util;
+use std::collections::LinkedList;
+use std::io::{self, Read};
 
 #[derive(Debug)]
 enum ParamMode {
@@ -59,11 +56,7 @@ impl Computer {
 
     pub fn run_program<I: Read>(&mut self, mut input: I) -> ReturnMode {
         loop {
-            let raw_op = self.ram[self.inst_ptr];
-            // println!("Running raw_op: {:?}", raw_op);
             let op = self.read_op();
-
-            // println!("Running op: {:?}", op);
 
             match op {
                 Ok(Op::Add(a, b, out)) => {
@@ -322,7 +315,7 @@ impl Computer {
                 self.grow_ram_if_necessary(pos);
                 self.ram[pos] = val;
             }
-            (ParamMode::Immediate, val) => unreachable!("cant write given an immediate value"),
+            (ParamMode::Immediate, _) => unreachable!("cant write given an immediate value"),
             (ParamMode::Relative, pos) => {
                 let pos = (*pos + self.relative_base) as usize;
                 self.grow_ram_if_necessary(pos);

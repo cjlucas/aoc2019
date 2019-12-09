@@ -1,5 +1,5 @@
 use crate::util;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::io::BufRead;
 
 pub fn parse_input() -> Vec<Vec<String>> {

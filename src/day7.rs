@@ -2,8 +2,6 @@ use permutate::Permutator;
 use std::collections::{HashSet, LinkedList};
 use std::io::{self, Read, Write};
 
-use crate::util;
-
 #[derive(Debug)]
 enum ParamMode {
     Position,
