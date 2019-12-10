@@ -385,6 +385,8 @@ pub fn part2(ram: &Vec<i32>) -> (Vec<i32>, i32) {
 mod tests {
     use super::*;
 
+    use crate::util;
+
     fn read_sample<'a>(input: &'a str) -> Vec<i32> {
         input
             .trim()
