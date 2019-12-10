@@ -21,11 +21,27 @@ struct Point {
     y: usize,
 }
 
-fn distance(a: &Point, b: &Point) -> (i64, i64) {
-    (b.x as i64 - a.x as i64, b.y as i64 - a.y as i64)
+impl Point {
+    fn distance(&self, other: &Point) -> usize {
+        (other.x as i64 - self.x as i64).abs() as usize
+            + (other.y as i64 - self.y as i64).abs() as usize
+    }
+
+    fn direction(&self, other: &Point) -> f64 {
+        let dx = other.x as i64 - self.x as i64;
+        let dy = other.y as i64 - self.y as i64;
+
+        let mut angle = (dx as f64).atan2(-dy as f64).to_degrees();
+
+        if angle < 0.0 {
+            angle += 360f64;
+        }
+
+        angle
+    }
 }
 
-pub fn part1(input: Vec<Vec<char>>) -> usize {
+fn build_map(input: Vec<Vec<char>>) -> HashSet<Point> {
     let mut map = HashSet::new();
 
     for (i, row) in input.iter().enumerate() {
@@ -36,100 +52,59 @@ pub fn part1(input: Vec<Vec<char>>) -> usize {
         }
     }
 
-    let mut max = 0;
-    for obj in &map {
+    map
+}
+
+fn find_ideal_pos(map: &HashSet<Point>) -> (Point, usize) {
+    let mut max: (Point, usize) = (Point { x: 0, y: 0 }, 0);
+    for obj in map {
         let mut others: Vec<_> = map.iter().cloned().collect();
         others.sort_by(|a, b| {
-            let (x1, y1) = distance(obj, a);
-            let (x2, y2) = distance(obj, b);
+            let d1 = obj.distance(a);
+            let d2 = obj.distance(b);
 
-            let d1 = x1.abs() + y1.abs();
-            let d2 = x2.abs() + y2.abs();
             d1.cmp(&d2)
         });
 
-        let mut slopes = HashSet::<(bool, bool, i64)>::new();
+        let mut slopes = HashSet::<i64>::new();
 
         assert!(*obj == others[0]);
 
         let mut visible = 0;
         for other in &others[1..] {
-            let (x, y) = distance(obj, other);
-            let thing = ((x as f64 / y as f64) * 1_000_000 as f64) as i64;
-            let thing = (x > 0, y > 0, thing);
+            let d = obj.direction(other);
 
+            let thing = (d * 1_000_000_f64) as i64;
             if !slopes.contains(&thing) {
                 visible += 1;
                 slopes.insert(thing);
             }
         }
 
-        if visible > max {
-            max = visible;
+        if visible > max.1 {
+            max = (obj.clone(), visible);
         }
     }
 
     max
 }
 
+pub fn part1(input: Vec<Vec<char>>) -> usize {
+    let map = build_map(input);
+    find_ideal_pos(&map).1
+}
+
 pub fn part2(input: Vec<Vec<char>>) -> usize {
-    let mut map = HashSet::new();
+    let map = build_map(input);
+    let maxobj = find_ideal_pos(&map).0;
 
-    for (i, row) in input.iter().enumerate() {
-        for (j, val) in row.iter().enumerate() {
-            if *val == '#' {
-                map.insert(Point { x: j, y: i });
-            }
-        }
-    }
-    let mut maxobj = Point { x: 0, y: 0 };
-    let mut max = 0;
-    for obj in &map {
-        let mut others: Vec<_> = map.iter().cloned().collect();
-        others.sort_by(|a, b| {
-            let (x1, y1) = distance(obj, a);
-            let (x2, y2) = distance(obj, b);
-
-            let d1 = x1.abs() + y1.abs();
-            let d2 = x2.abs() + y2.abs();
-            d1.cmp(&d2)
-        });
-
-        let mut slopes = HashSet::<(bool, bool, i64)>::new();
-
-        assert!(*obj == others[0]);
-
-        let mut visible = 0;
-        for other in &others[1..] {
-            let (x, y) = distance(obj, other);
-            let thing = ((x as f64 / y as f64) * 1_000_000 as f64) as i64;
-            let thing = (x > 0, y > 0, thing);
-
-            if !slopes.contains(&thing) {
-                visible += 1;
-                slopes.insert(thing);
-            }
-        }
-
-        if visible > max {
-            maxobj = obj.clone();
-            max = visible;
-        }
-    }
-
-    let mut points = Vec::<(f64, u64, Point)>::new();
+    let mut points = Vec::<(f64, usize, Point)>::new();
 
     for other in &map {
-        let (x, y) = distance(&maxobj, other);
-        let d = x.abs() as u64 + y.abs() as u64;
+        let dir = maxobj.direction(other);
+        let dist = maxobj.distance(other);
 
-        let mut angle = (x as f64).atan2(-y as f64).to_degrees();
-
-        if angle < 0.0 {
-            angle += 360f64;
-        }
-
-        points.push((angle, d, other.clone()));
+        points.push((dir, dist, other.clone()));
     }
 
     points.sort_unstable_by(|a, b| {
