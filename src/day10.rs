@@ -15,23 +15,23 @@ fn parse_input(mut r: impl Read) -> Vec<Vec<char>> {
     s.lines().map(|line| line.chars().collect()).collect()
 }
 
-type Point = (usize, usize);
-
-fn distance(a: Point, b: Point) -> (i64, i64) {
-    let (x1, y1) = a;
-    let (x2, y2) = b;
-
-    (x2 as i64 - x1 as i64, y2 as i64 - y1 as i64)
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+struct Point {
+    x: usize,
+    y: usize,
 }
 
-pub fn part1() {
-    let input = read_input();
+fn distance(a: &Point, b: &Point) -> (i64, i64) {
+    (b.x as i64 - a.x as i64, b.y as i64 - a.y as i64)
+}
+
+pub fn part1(input: Vec<Vec<char>>) -> usize {
     let mut map = HashSet::new();
 
     for (i, row) in input.iter().enumerate() {
         for (j, val) in row.iter().enumerate() {
             if *val == '#' {
-                map.insert((i, j));
+                map.insert(Point { x: j, y: i });
             }
         }
     }
@@ -40,8 +40,8 @@ pub fn part1() {
     for obj in &map {
         let mut others: Vec<_> = map.iter().cloned().collect();
         others.sort_by(|a, b| {
-            let (x1, y1) = distance(*obj, *a);
-            let (x2, y2) = distance(*obj, *b);
+            let (x1, y1) = distance(obj, a);
+            let (x2, y2) = distance(obj, b);
 
             let d1 = x1.abs() + y1.abs();
             let d2 = x2.abs() + y2.abs();
@@ -54,7 +54,7 @@ pub fn part1() {
 
         let mut visible = 0;
         for other in &others[1..] {
-            let (x, y) = distance(*obj, *other);
+            let (x, y) = distance(obj, other);
             let thing = ((x as f64 / y as f64) * 1_000_000 as f64) as i64;
             let thing = (x > 0, y > 0, thing);
 
@@ -69,28 +69,26 @@ pub fn part1() {
         }
     }
 
-    println!("{}", max);
+    max
 }
 
-pub fn part2(input: Vec<Vec<char>>) {
+pub fn part2(input: Vec<Vec<char>>) -> usize {
     let mut map = HashSet::new();
 
     for (i, row) in input.iter().enumerate() {
         for (j, val) in row.iter().enumerate() {
             if *val == '#' {
-                map.insert((j, i));
+                map.insert(Point { x: j, y: i });
             }
         }
     }
-    println!("map: {}", map.len());
-
-    let mut maxobj = (0, 0);
+    let mut maxobj = Point { x: 0, y: 0 };
     let mut max = 0;
     for obj in &map {
         let mut others: Vec<_> = map.iter().cloned().collect();
         others.sort_by(|a, b| {
-            let (x1, y1) = distance(*obj, *a);
-            let (x2, y2) = distance(*obj, *b);
+            let (x1, y1) = distance(obj, a);
+            let (x2, y2) = distance(obj, b);
 
             let d1 = x1.abs() + y1.abs();
             let d2 = x2.abs() + y2.abs();
@@ -103,7 +101,7 @@ pub fn part2(input: Vec<Vec<char>>) {
 
         let mut visible = 0;
         for other in &others[1..] {
-            let (x, y) = distance(*obj, *other);
+            let (x, y) = distance(obj, other);
             let thing = ((x as f64 / y as f64) * 1_000_000 as f64) as i64;
             let thing = (x > 0, y > 0, thing);
 
@@ -114,18 +112,15 @@ pub fn part2(input: Vec<Vec<char>>) {
         }
 
         if visible > max {
-            maxobj = *obj;
+            maxobj = obj.clone();
             max = visible;
         }
     }
-    println!("{:?}, {}", maxobj, max);
 
     let mut points = Vec::<(f64, u64, Point)>::new();
 
-    let mut visible = 0;
-
     for other in &map {
-        let (x, y) = distance(maxobj, *other);
+        let (x, y) = distance(&maxobj, other);
         let d = x.abs() as u64 + y.abs() as u64;
 
         let mut angle = (x as f64).atan2(-y as f64).to_degrees();
@@ -134,7 +129,7 @@ pub fn part2(input: Vec<Vec<char>>) {
             angle += 360f64;
         }
 
-        points.push((angle, d, *other));
+        points.push((angle, d, other.clone()));
     }
 
     points.sort_unstable_by(|a, b| {
@@ -144,20 +139,16 @@ pub fn part2(input: Vec<Vec<char>>) {
         (*angle_a, *dista).partial_cmp(&(*angle_b, *distb)).unwrap()
     });
 
-    println!("{:?}", points);
-
     let mut destroyed = HashSet::<Point>::new();
 
     let mut last_angle = 360f64;
     loop {
-        println!("top of loop");
         for (ang, _, point) in &points {
             if *point == maxobj {
                 continue;
             }
 
             if (last_angle - ang).abs() < 0.000001 {
-                println!("skipping {} {}", last_angle, ang);
                 continue;
             }
 
@@ -165,14 +156,11 @@ pub fn part2(input: Vec<Vec<char>>) {
                 continue;
             }
 
-            destroyed.insert(*point);
-            println!("destroyed {:?}", *point);
+            destroyed.insert(point.clone());
             last_angle = *ang;
 
             if destroyed.len() == 200 {
-                let (x, y) = *point;
-                println!("{}", (x * 100) + y);
-                return;
+                return (point.x * 100) + point.y;
             }
         }
     }
@@ -182,17 +170,19 @@ pub fn part2(input: Vec<Vec<char>>) {
 mod tests {
     use super::*;
 
+    use crate::util;
+
     #[test]
-    fn part2_sample() {
-        let input = parse_input(".#..##.###...#######\n##.############..##.\n.#.######.########.#\n.###.#######.####.#.\n#####.##.#.##.###.##\n..#####..#.#########\n####################\n#.####....###.#.#.##\n##.#################\n#####.##.###..####..\n..######..##.#######\n####.##.####...##..#\n.#####..#.######.###\n##...#.##########...\n#.##########.#######\n.####.#.###.###.#.##\n....##.##.###..#####\n.#.#.###########.###\n#.#.#.#####.####.###\n###.##.####.##.#..##".as_bytes());
-        part2(input);
-        assert!(false)
+    fn part1_input() {
+        let input = util::read_input_file("day10.txt");
+        let input = parse_input(&input[..]);
+        assert_eq!(263, part1(input));
     }
 
-    // #[test]
-    // fn fuck() {
-    //     let input = parse_input(".#..#..###\n####.###.#\n....###.#.\n..###.##.#\n##.##.#.#.\n....###..#\n..#.#..#.#\n#..#.#.###\n.##...##.#\n.....#.#..".as_bytes());
-    //     part2(input);
-    //     assert!(false)
-    // }
+    #[test]
+    fn part2_input() {
+        let input = util::read_input_file("day10.txt");
+        let input = parse_input(&input[..]);
+        assert_eq!(1110, part2(input));
+    }
 }
