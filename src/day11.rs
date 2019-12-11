@@ -345,11 +345,11 @@ enum Direction {
     W,
 }
 
-pub fn part1(input: impl Read) {
+pub fn part1(input: impl Read) -> usize {
     let ram = read_input(input);
     let painted = run_program(ram, true);
 
-    println!("{:?}", painted.len());
+    painted.len()
 }
 
 pub fn run_program(ram: Vec<i64>, first_panel_black: bool) -> HashMap<Point, bool> {
@@ -413,6 +413,17 @@ pub fn part2(input: impl Read) {
 
         println!();
     }
+}
 
-    println!("{:?}", painted.len());
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use crate::util;
+
+    #[test]
+    fn part1_input() {
+        let input = util::read_input_file("day11.txt");
+        assert_eq!(2184, part1(&input[..]));
+    }
 }
