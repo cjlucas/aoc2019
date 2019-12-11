@@ -403,8 +403,6 @@ pub fn part2(input: impl Read) {
     let miny = painted.keys().min_by(|a, b| a.1.cmp(&b.1)).unwrap().1;
     let maxy = painted.keys().max_by(|a, b| a.1.cmp(&b.1)).unwrap().1;
 
-    println!("{} {} {} {}", minx, maxx, miny, maxy);
-
     for x in minx..=maxx {
         for y in miny..=maxy {
             let is_white = painted.get(&(x, y)).unwrap_or(&false);
