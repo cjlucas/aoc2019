@@ -108,10 +108,10 @@ pub fn part2(input: Vec<Vec<char>>) -> usize {
     }
 
     points.sort_unstable_by(|a, b| {
-        let (angle_a, dista, _) = a;
-        let (angle_b, distb, _) = b;
+        let (angle_a, dist_a, _) = *a;
+        let (angle_b, dist_b, _) = *b;
 
-        (*angle_a, *dista).partial_cmp(&(*angle_b, *distb)).unwrap()
+        (angle_a, dist_a).partial_cmp(&(angle_b, dist_b)).unwrap()
     });
 
     let mut destroyed = HashSet::<Point>::new();
