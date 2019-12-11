@@ -347,64 +347,21 @@ enum Direction {
 
 pub fn part1(input: impl Read) {
     let ram = read_input(input);
-
-    let mut painted = HashMap::<Point, bool>::new();
-
-    let mut computer = Computer::new(ram);
-    let mut input = [0u8; 8];
-    let mut point = (0, 0);
-    let mut direction = Direction::N;
-
-    let mut waiting_for_color = true;
-    while let ReturnMode::Output(x) = computer.run_program(&input[..]) {
-        println!("output: {}", x);
-
-        if waiting_for_color {
-            painted.insert(point, x == 1);
-            waiting_for_color = false;
-        } else {
-            direction = match (&direction, x) {
-                (Direction::N, 0) => Direction::W,
-                (Direction::N, 1) => Direction::E,
-                (Direction::E, 0) => Direction::N,
-                (Direction::E, 1) => Direction::S,
-                (Direction::S, 0) => Direction::E,
-                (Direction::S, 1) => Direction::W,
-                (Direction::W, 0) => Direction::S,
-                (Direction::W, 1) => Direction::N,
-                _ => unreachable!("unkown direction {:?} or cmd {}", direction, x),
-            };
-
-            point = match direction {
-                Direction::N => (point.0, point.1 + 1),
-                Direction::E => (point.0 + 1, point.1),
-                Direction::S => (point.0, point.1 - 1),
-                Direction::W => (point.0 - 1, point.1),
-            };
-
-            let is_white = painted.get(&point).unwrap_or(&false);
-            input = (if *is_white { 1 } else { 0 } as i64).to_be_bytes();
-            waiting_for_color = true;
-        }
-    }
+    let painted = run_program(ram, true);
 
     println!("{:?}", painted.len());
 }
 
-pub fn part2(input: impl Read) {
-    let ram = read_input(input);
-
+pub fn run_program(ram: Vec<i64>, first_panel_black: bool) -> HashMap<Point, bool> {
     let mut painted = HashMap::<Point, bool>::new();
 
     let mut computer = Computer::new(ram);
-    let mut input = 1_i64.to_be_bytes();
+    let mut input = (if first_panel_black { 0i64 } else { 1i64 }).to_be_bytes();
     let mut point = (0, 0);
     let mut direction = Direction::N;
 
     let mut waiting_for_color = true;
     while let ReturnMode::Output(x) = computer.run_program(&input[..]) {
-        println!("output: {}", x);
-
         if waiting_for_color {
             painted.insert(point, x == 1);
             waiting_for_color = false;
@@ -433,6 +390,13 @@ pub fn part2(input: impl Read) {
             waiting_for_color = true;
         }
     }
+
+    painted
+}
+
+pub fn part2(input: impl Read) {
+    let ram = read_input(input);
+    let painted = run_program(ram, false);
 
     let minx = painted.keys().min_by(|a, b| a.0.cmp(&b.0)).unwrap().0;
     let maxx = painted.keys().max_by(|a, b| a.0.cmp(&b.0)).unwrap().0;
